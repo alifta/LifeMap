@@ -8,7 +8,7 @@ public class Main {
 
         String DB = "icc.db";
         String input;
-//         input = "/home/alift/cloud/java/network/data/tinyEWD1.txt";
+        // input = "/home/alift/cloud/java/network/data/tinyEWD1.txt";
         input = "/Users/alift/cloud/java/network/data/tinyEWD1.txt";
 
         // create random network
@@ -24,13 +24,13 @@ public class Main {
         StdOut.println(G);
         G.print();
 
-        G.histogram();
+        // G.histogram();
 
         // ALGORITHM
 
-        int[] testnodes = G.randNodes(G.V());
-        int node1 = testnodes[0];
-        int node2 = testnodes[1];
+//        int[] testnodes = G.randNodes(G.V());
+//        int node1 = testnodes[0];
+//        int node2 = testnodes[1];
 
 //        G.reachabilityRatio();
 //        G.reachability(node1);
@@ -41,13 +41,17 @@ public class Main {
 //        G.bfsPath(0, 6);
 //        StdOut.println();
 
-//        G.hits();
+        G.hits();
+        StdOut.println("\n");
+        G.hitsRandomized();
+
+        StdOut.println("\n\n");
 
         // TEMPORAL
 
-//        TemporalNetwork T = new TemporalNetwork(G);
-//        StdOut.println(T);
-//        T.print();
+        TemporalNetwork T = new TemporalNetwork(G);
+        StdOut.println(T);
+        T.print();
 
 //        int[] testtimes = T.randTimes(1);
 //        int time1 = testtimes[0];
@@ -61,7 +65,9 @@ public class Main {
 //         T.temporalReachability(-2);
 
         // calculate hits
-//        T.hits();
+        T.hits();
+        StdOut.println("\n");
+        T.hitsRandomized();
 
 //===========================================
 

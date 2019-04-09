@@ -17,6 +17,18 @@ public class STFunction {
         }
     }
 
+    // retuen sum of all the values inside ST
+    public static double sumIntDouble(ST<Integer, Double> st) {
+        double sum = 0.0;
+        int s = st.size();
+        if (s > 0) {
+            for (Integer key : st.keys()) {
+                sum += Math.abs(st.get(key));
+            }
+        }
+        return sum;
+    }
+
     // return the element-wise difference of two table
     // we assume that both STs have same size and same set of keys
     // another assumption is that keys are 0 ... n (or size)

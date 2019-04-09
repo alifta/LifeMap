@@ -4,6 +4,10 @@ import edu.princeton.cs.algs4.*;
 import edu.princeton.cs.algs4.Queue;
 import edu.princeton.cs.algs4.Stack;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.sql.*;
 
 import java.util.*;
@@ -373,6 +377,7 @@ public class StaticNetwork extends Network {
         int maxIteration = 100;
         double tolerance = 1.0e-8;
         hits(maxIteration, tolerance);
+        saveHits("normal");
     }
 
     public void hits(int maxIteration, double tolerance) {
@@ -428,11 +433,18 @@ public class StaticNetwork extends Network {
             }
         }
         // STFunction.normSum(hubScore); // networkx
-        StdOut.println("hub-score:");
+        StdOut.println("hub-score:" + STFunction.sumIntDouble(hubScore));
         STFunction.print(hubScore);
         // STFunction.normSum(authorityScore); // networkx
-        StdOut.println("authority-score:");
+        StdOut.println("authority-score:" + STFunction.sumIntDouble(authorityScore));
         STFunction.print(authorityScore);
+    }
+
+    public void hitsRandomized() {
+        int maxIteration = 100;
+        double tolerance = 1.0e-8;
+        hitsRandomized(maxIteration, tolerance);
+        saveHits("randomized");
     }
 
     public void hitsRandomized(int maxIteration, double tolerance) {
@@ -440,7 +452,8 @@ public class StaticNetwork extends Network {
         // meaning the sum of each row is equal to 1, i.e., sum of indegree of each node is equal to 1
         // we call this new matrix weightRowNorm, and we call A_col, weightColNorm which used for hub score
 
-        double sigma = 0.15;
+        double epsilon = 0.15;
+        double damping = 1 - epsilon;
 
         double rowNorm; // which will be indegree of each node
         double colNorm;
@@ -473,47 +486,67 @@ public class StaticNetwork extends Network {
             // update all authority values first. For all the nodes in the network do:
             for (int v = 0; v < V; v++) {
                 // first set all of them as zero
-
                 authorityScore.put(v, 0.0);
-                // get set of the incoming neighbors of node v
 
                 // denominator of normalizer
                 rowNorm = (double) nodeMap.get(v).indegree();
 
+                // get the set of node v's incoming neighbors
                 for (int inNeighbor : nodeMap.get(v).inNeighbors()) {
                     // add hub-score of in-neigh to it current auth-score
                     authorityScore.put(v, authorityScore.get(v) + hubScore.get(inNeighbor) / rowNorm);
                 }
+
+                // here we affect the reset (damping) factor
+                authorityScore.put(v, (authorityScore.get(v) * damping) + epsilon);
             }
+
             // normalize authority scores
-            STFunction.normSqrt(authorityScore);
+            // STFunction.normSqrt(authorityScore);
+
             // then update hub values
             for (int v = 0; v < V; v++) {
+                // first set all of them as zero
                 hubScore.put(v, 0.0);
+
                 // get the set of the outgoing neighbors of node v
                 for (int outNeighbor : nodeMap.get(v).outNeighbors()) {
+                    // denominator of normalizer
+                    colNorm = (double) nodeMap.get(outNeighbor).indegree();
+
                     // add auth-score of out-neigh to it current hub-score
-                    hubScore.put(v, hubScore.get(v) + authorityScore.get(outNeighbor));
+                    hubScore.put(v, hubScore.get(v) + authorityScore.get(outNeighbor) / colNorm);
                 }
+
+                // here we affect the reset (damping) factor
+                hubScore.put(v, (hubScore.get(v) * damping) + epsilon);
+
             }
+
             // normalize hub scores
             STFunction.normSqrt(hubScore);
+
             // normalizing each score vector (networkx)
             // STFunction.normMax(authorityScore);
             // STFunction.normMax(hubScore);
+
             // check if we converged then halt
             diffH = STFunction.diffIntDouble(hubScore, copyHubScore);
             diffA = STFunction.diffIntDouble(authorityScore, copyAuthorityScore);
+
             if (diffA < tolerance && diffH < tolerance) {
                 StdOut.println("finishing the algorithm with " + i + " iteration and tolerance of " + diffA);
+                // break out of the main loop
                 break;
             }
         }
+
         // STFunction.normSum(hubScore); // networkx
-        StdOut.println("hub-score:");
+        StdOut.println("hub-score:" + STFunction.sumIntDouble(hubScore));
         STFunction.print(hubScore);
+
         // STFunction.normSum(authorityScore); // networkx
-        StdOut.println("authority-score:");
+        StdOut.println("authority-score:" + STFunction.sumIntDouble(authorityScore));
         STFunction.print(authorityScore);
     }
 
@@ -594,6 +627,38 @@ public class StaticNetwork extends Network {
     // save the network as edge list
     public void save() {
         // todo
+    }
+
+    // ----------------------------------- SAVE ----------------------------------- //
+
+    // save HITS scores
+    public void saveHits(String appendix) {
+        File f = new File("./data/hits-" + appendix + ".txt");
+        FileWriter fr = null;
+        BufferedWriter br = null;
+
+        try {
+            fr = new FileWriter(f);
+            br = new BufferedWriter(fr);
+
+            br.write(String.format("%s\t%s\t%s\n", "id", "auth", "hub"));
+            for (int node : authorityScore.keys()) {
+                br.write(String.format("%s\t%.3f\t%.3f\n",
+                        node,
+                        authorityScore.get(node),
+                        hubScore.get(node)
+                ));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                br.close();
+                fr.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
 
